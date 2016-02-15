@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,6 +131,7 @@ public class Server implements CassandraDaemon.Server
         ServerBootstrap bootstrap = new ServerBootstrap()
                                     .channel(useEpoll ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
                                     .childOption(ChannelOption.TCP_NODELAY, true)
+                                    .childOption(ChannelOption.SO_REUSEADDR, true)
                                     .childOption(ChannelOption.SO_LINGER, 0)
                                     .childOption(ChannelOption.SO_KEEPALIVE, DatabaseDescriptor.getRpcKeepAlive())
                                     .childOption(ChannelOption.ALLOCATOR, CBUtil.allocator)
@@ -172,6 +174,12 @@ public class Server implements CassandraDaemon.Server
     public int getConnectedClients()
     {
         return connectionTracker.getConnectedClients();
+    }
+
+    @VisibleForTesting
+    ChannelGroup getChannels()
+    {
+        return connectionTracker.allChannels;
     }
     
     private void close()
