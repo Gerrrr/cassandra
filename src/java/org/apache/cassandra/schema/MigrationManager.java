@@ -43,6 +43,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
+import org.apache.cassandra.utils.Pair;
 import org.apache.cassandra.utils.WrappedRunnable;
 
 public class MigrationManager
@@ -139,13 +140,22 @@ public class MigrationManager
 
     public static void waitUntilReadyForBootstrap()
     {
+        Pair<InetAddress, CountDownLatch> task;
         CountDownLatch completionLatch;
-        while ((completionLatch = MigrationTask.getInflightTasks().poll()) != null)
+        InetAddress endpoint;
+        EndpointState state;
+        while ((task = MigrationTask.getInflightTasks().poll()) != null)
         {
             try
             {
-                if (!completionLatch.await(MIGRATION_TASK_WAIT_IN_SECONDS, TimeUnit.SECONDS))
-                    logger.error("Migration task failed to complete");
+                completionLatch = task.right;
+                if (!completionLatch.await(MIGRATION_TASK_WAIT_IN_SECONDS, TimeUnit.SECONDS)) {
+                    logger.error("Migration task failed to complete, retrying");
+                    endpoint = task.left;
+                    state = Gossiper.instance.getEndpointStateForEndpoint(endpoint);
+                    scheduleSchemaPull(endpoint, state);
+                }
+
             }
             catch (InterruptedException e)
             {

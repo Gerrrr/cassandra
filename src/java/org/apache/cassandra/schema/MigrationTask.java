@@ -36,13 +36,14 @@ import org.apache.cassandra.net.IAsyncCallback;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.utils.Pair;
 import org.apache.cassandra.utils.WrappedRunnable;
 
 final class MigrationTask extends WrappedRunnable
 {
     private static final Logger logger = LoggerFactory.getLogger(MigrationTask.class);
 
-    private static final ConcurrentLinkedQueue<CountDownLatch> inflightTasks = new ConcurrentLinkedQueue<>();
+    private static final ConcurrentLinkedQueue<Pair<InetAddress, CountDownLatch>> inflightTasks = new ConcurrentLinkedQueue<>();
 
     private static final Set<BootstrapState> monitoringBootstrapStates = EnumSet.of(BootstrapState.NEEDS_BOOTSTRAP, BootstrapState.IN_PROGRESS);
 
@@ -53,7 +54,7 @@ final class MigrationTask extends WrappedRunnable
         this.endpoint = endpoint;
     }
 
-    static ConcurrentLinkedQueue<CountDownLatch> getInflightTasks()
+    static ConcurrentLinkedQueue<Pair<InetAddress, CountDownLatch>> getInflightTasks()
     {
         return inflightTasks;
     }
@@ -106,7 +107,7 @@ final class MigrationTask extends WrappedRunnable
 
         // Only save the latches if we need bootstrap or are bootstrapping
         if (monitoringBootstrapStates.contains(SystemKeyspace.getBootstrapState()))
-            inflightTasks.offer(completionLatch);
+            inflightTasks.offer(Pair.create(endpoint, completionLatch));
 
         MessagingService.instance().sendRR(message, endpoint, cb);
     }
