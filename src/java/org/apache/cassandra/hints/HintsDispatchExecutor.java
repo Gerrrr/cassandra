@@ -60,7 +60,7 @@ final class HintsDispatchExecutor
         this.isAlive = isAlive;
 
         scheduledDispatches = new ConcurrentHashMap<>();
-        executor = new JMXEnabledThreadPoolExecutor(1,
+        executor = new JMXEnabledThreadPoolExecutor(maxThreads,
                                                     maxThreads,
                                                     1,
                                                     TimeUnit.MINUTES,
