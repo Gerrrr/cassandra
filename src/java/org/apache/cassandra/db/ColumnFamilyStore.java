@@ -2300,9 +2300,9 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
      */
     public void snapshotWithoutFlush(String snapshotName, Predicate<SSTableReader> predicate, boolean ephemeral)
     {
+        final JSONArray filesJSONArr = new JSONArray();
         for (ColumnFamilyStore cfs : concatWithIndexes())
         {
-            final JSONArray filesJSONArr = new JSONArray();
             try (RefViewFragment currentView = cfs.selectAndReference(CANONICAL_SSTABLES))
             {
                 for (SSTableReader ssTable : currentView.sstables)
@@ -2317,10 +2317,9 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                     if (logger.isDebugEnabled())
                         logger.debug("Snapshot for {} keyspace data file {} created in {}", keyspace, ssTable.getFilename(), snapshotDirectory);
                 }
-
-                writeSnapshotManifest(filesJSONArr, snapshotName);
             }
         }
+        writeSnapshotManifest(filesJSONArr, snapshotName);
         if (ephemeral)
             createEphemeralSnapshotMarkerFile(snapshotName);
     }
