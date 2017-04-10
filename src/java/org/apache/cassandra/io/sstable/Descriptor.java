@@ -142,6 +142,11 @@ public class Descriptor
     public String relativeFilenameFor(Component component)
     {
         final StringBuilder buff = new StringBuilder();
+        if (directory.getName().startsWith(Directories.SECONDARY_INDEX_NAME_SEPARATOR))
+        {
+            buff.append(directory.getName()).append(File.separator);
+        }
+
         appendFileName(buff);
         buff.append(separator).append(component.name());
         return buff.toString();

@@ -19,6 +19,7 @@
 package org.apache.cassandra.db;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -95,6 +96,9 @@ import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.Pair;
 import org.apache.cassandra.utils.WrappedRunnable;
 import org.apache.thrift.TException;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import static org.apache.cassandra.Util.cellname;
 import static org.apache.cassandra.Util.column;
@@ -2317,5 +2321,40 @@ public class ColumnFamilyStoreTest
         assertNull(PerRowSecondaryIndexTest.TestIndex.LAST_INDEXED_KEY);
         
         PerRowSecondaryIndexTest.TestIndex.reset();
+    }
+
+    @Test
+    public void testSnapshotWithoutFlushWithSecondaryIndexes() throws Exception
+    {
+        String keyspaceName = KEYSPACE1;
+        String cfName= CF_INDEX1;
+        Keyspace keyspace = Keyspace.open(keyspaceName);
+        ColumnFamilyStore cfs = keyspace.getColumnFamilyStore(cfName);
+
+        List<Mutation> rms = new LinkedList<>();
+        Mutation rm;
+
+        rm = new Mutation(keyspaceName, ByteBufferUtil.bytes("k1"));
+        rm.add(cfName, cellname("birthdate"), ByteBufferUtil.bytes(1L), 0);
+        rm.add(cfName, cellname("nobirthdate"), ByteBufferUtil.bytes(1L), 0);
+        rms.add(rm);
+        Util.writeColumnFamily(rms);
+
+        String snapshotName = "newSnapshot";
+        cfs.snapshotWithoutFlush(snapshotName);
+
+        File snapshotManifestFile = cfs.directories.getSnapshotManifestFile(snapshotName);
+        JSONParser parser = new JSONParser();
+        JSONObject manifest = (JSONObject) parser.parse(new FileReader(snapshotManifestFile));
+        JSONArray files = (JSONArray) manifest.get("files");
+
+        // Keyspace1-Indexed1 and the corresponding index CFS
+        assert files.size() == 2;
+
+        // Snapshot of the secondary index CFS is stored in the subfolder with the same file names
+        String file0 = (String)files.get(0);
+        String file1 = (String)files.get(1);
+        assert !file0.equals(file1);
+        assert file1.endsWith(file0);
     }
 }
