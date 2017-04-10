@@ -56,8 +56,7 @@ final class HintsDispatchExecutor
         this.isPaused = isPaused;
 
         scheduledDispatches = new ConcurrentHashMap<>();
-        executor = new JMXEnabledThreadPoolExecutor(1,
-                                                    maxThreads,
+        executor = new JMXEnabledThreadPoolExecutor(maxThreads,
                                                     1,
                                                     TimeUnit.MINUTES,
                                                     new LinkedBlockingQueue<>(),
