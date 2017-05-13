@@ -2243,6 +2243,7 @@ public class ColumnFamilyStoreTest extends SchemaLoader
     {
         String keyspaceName = "Keyspace1";
         String cfName= "Indexed1";
+        Keyspace.clear(keyspaceName);
         Keyspace keyspace = Keyspace.open(keyspaceName);
         ColumnFamilyStore cfs = keyspace.getColumnFamilyStore(cfName);
 
