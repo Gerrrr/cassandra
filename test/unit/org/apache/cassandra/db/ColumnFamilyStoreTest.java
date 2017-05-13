@@ -2328,6 +2328,7 @@ public class ColumnFamilyStoreTest
     {
         String keyspaceName = KEYSPACE1;
         String cfName= CF_INDEX1;
+        Keyspace.clear(keyspaceName);
         Keyspace keyspace = Keyspace.open(keyspaceName);
         ColumnFamilyStore cfs = keyspace.getColumnFamilyStore(cfName);
 
