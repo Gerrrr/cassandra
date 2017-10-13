@@ -26,6 +26,7 @@ import org.apache.cassandra.cql3.CQLTester;
 import org.apache.cassandra.cql3.UntypedResultSet;
 import org.apache.cassandra.cql3.UntypedResultSet.Row;
 import org.apache.cassandra.exceptions.InvalidRequestException;
+import org.apache.cassandra.utils.ByteBufferUtil;
 
 public class InsertTest extends CQLTester
 {
@@ -208,6 +209,22 @@ public class InsertTest extends CQLTester
 
         assertInvalidMessage("Undefined column name valuex",
                              "INSERT INTO %s (partitionKey, clustering_1, clustering_2, valuex) VALUES (0, 0, 0, 2)");
+    }
+
+    @Test
+    public void testInsertWithCompactStaticFormat() throws Throwable
+    {
+        createTable("CREATE TABLE %s (a int PRIMARY KEY, b int, c int) WITH COMPACT STORAGE");
+        assertInvalidMessage("Undefined column name column1",
+                             "INSERT INTO %s (a, b, c, column1) VALUES (?, ?, ?, ?)",
+                             1, 1, 1, ByteBufferUtil.bytes('a'));
+            assertInvalidMessage("Undefined column name value",
+                                 "INSERT INTO %s (a, b, c, value) VALUES (?, ?, ?, ?)",
+                                 1, 1, 1, ByteBufferUtil.bytes('a'));
+            assertInvalidMessage("Undefined column name column1",
+                                 "INSERT INTO %s (a, b, c, column1, value) VALUES (?, ?, ?, ?, ?)",
+                                 1, 1, 1, ByteBufferUtil.bytes('a'), ByteBufferUtil.bytes('b'));
+            assertEmpty(execute("SELECT * FROM %s"));
     }
 
     @Test
