@@ -159,6 +159,14 @@ public class UpdateStatement extends ModificationStatement
             {
                 ColumnDefinition def = getColumnDefinition(cfm, columnNames.get(i));
 
+                // Check for hidden columns if the table is created WITH COMPACT STORAGE
+                if(cfm.isStaticCompactTable())
+                 {
+                    // column1 or value
+                    checkFalse((def.kind == ColumnDefinition.Kind.CLUSTERING || def.kind == ColumnDefinition.Kind.REGULAR),
+                               "Undefined column name %s", def.name);
+                }
+
                 if (def.isClusteringColumn())
                     hasClusteringColumnsSet = true;
 
