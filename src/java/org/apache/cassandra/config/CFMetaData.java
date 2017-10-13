@@ -130,6 +130,8 @@ public final class CFMetaData
     //For hot path serialization it's often easier to store this info here
     private volatile ColumnFilter allColumnFilter;
 
+    private volatile Set<ColumnDefinition> hiddenColumns;
+
     /**
      * These two columns are "virtual" (e.g. not persisted together with schema).
      *
@@ -399,6 +401,25 @@ public final class CFMetaData
             this.comparator = new ClusteringComparator(extractTypes(clusteringColumns));
 
         this.allColumnFilter = ColumnFilter.all(this);
+
+        Set<ColumnDefinition> newHiddenColumns;
+        if (isCompactTable() && isDense && CompactTables.hasEmptyCompactValue(this))
+        {
+            newHiddenColumns = Sets.newHashSetWithExpectedSize(1);
+            newHiddenColumns.add(compactValueColumn);
+        }
+        else if (isCompactTable() && !isDense && !isSuper)
+        {
+            newHiddenColumns = Sets.newHashSetWithExpectedSize(clusteringColumns.size() + 1);
+            newHiddenColumns.add(compactValueColumn);
+            newHiddenColumns.addAll(clusteringColumns);
+
+        }
+        else
+        {
+            newHiddenColumns = Sets.newHashSet();
+        }
+        this.hiddenColumns = newHiddenColumns;
     }
 
     public Indexes getIndexes()
@@ -783,6 +804,11 @@ public final class CFMetaData
         return compactValueColumn;
     }
 
+    private boolean isHiddenColumn(ColumnDefinition def)
+    {
+        return hiddenColumns.contains(def);
+    }
+
     public ClusteringComparator getKeyValidatorAsClusteringComparator()
     {
         boolean isCompound = keyValidator instanceof CompositeType;
@@ -984,7 +1010,10 @@ public final class CFMetaData
     // for instance) so...
     public ColumnDefinition getColumnDefinition(ByteBuffer name)
     {
-        return columnMetadata.get(name);
+        ColumnDefinition cd = columnMetadata.get(name);
+        if (cd == null || isHiddenColumn(cd))
+            return null;
+        return cd;
     }
 
     public static boolean isNameValid(String name)
