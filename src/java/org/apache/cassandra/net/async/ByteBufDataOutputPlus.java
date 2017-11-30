@@ -28,7 +28,7 @@ import org.apache.cassandra.io.util.CheckedFunction;
 import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.io.util.Memory;
 import org.apache.cassandra.io.util.UnbufferedDataOutputStreamPlus;
-import org.apache.cassandra.utils.memory.MemoryUtil;
+import org.apache.cassandra.utils.UnsafeByteBufferAccess;
 import org.apache.cassandra.utils.vint.VIntCoding;
 
 /**
@@ -43,7 +43,7 @@ public class ByteBufDataOutputPlus extends ByteBufOutputStream implements DataOu
     /**
      * ByteBuffer to use for defensive copies of direct {@link ByteBuffer}s - see {@link #write(ByteBuffer)}.
      */
-    private final ByteBuffer hollowBuffer = MemoryUtil.getHollowDirectByteBuffer();
+    private final ByteBuffer hollowBuffer = UnsafeByteBufferAccess.getHollowDirectByteBuffer();
 
     public ByteBufDataOutputPlus(ByteBuf buffer)
     {
@@ -68,7 +68,7 @@ public class ByteBufDataOutputPlus extends ByteBufOutputStream implements DataOu
         else
         {
             assert byteBuffer.isDirect();
-            MemoryUtil.duplicateDirectByteBuffer(byteBuffer, hollowBuffer);
+            UnsafeByteBufferAccess.duplicateDirectByteBuffer(byteBuffer, hollowBuffer);
             buffer.writeBytes(hollowBuffer);
         }
     }

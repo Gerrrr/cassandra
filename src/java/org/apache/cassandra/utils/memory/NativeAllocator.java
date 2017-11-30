@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.db.rows.*;
+import org.apache.cassandra.utils.UnsafeMemoryAccess;
 import org.apache.cassandra.utils.concurrent.OpOrder;
 
 /**
@@ -141,21 +142,21 @@ public class NativeAllocator extends MemtableAllocator
 
         // if there are none, we allocate one
         if (next == null)
-            next = new Region(MemoryUtil.allocate(size), size);
+            next = new Region(UnsafeMemoryAccess.allocate(size), size);
 
         // we try to swap in the region we've obtained;
         // if we fail to swap the region, we try to stash it for repurposing later; if we're out of stash room, we free it
         if (currentRegion.compareAndSet(current, next))
             regions.add(next);
         else if (!raceAllocated.stash(next))
-            MemoryUtil.free(next.peer);
+            UnsafeMemoryAccess.free(next.peer);
     }
 
     private long allocateOversize(int size)
     {
         // satisfy large allocations directly from JVM since they don't cause fragmentation
         // as badly, and fill up our regions quickly
-        Region region = new Region(MemoryUtil.allocate(size), size);
+        Region region = new Region(UnsafeMemoryAccess.allocate(size), size);
         regions.add(region);
 
         long peer;
@@ -168,7 +169,7 @@ public class NativeAllocator extends MemtableAllocator
     public void setDiscarded()
     {
         for (Region region : regions)
-            MemoryUtil.free(region.peer);
+            UnsafeMemoryAccess.free(region.peer);
 
         super.setDiscarded();
     }
@@ -263,8 +264,8 @@ public class NativeAllocator extends MemtableAllocator
         public String toString()
         {
             return "Region@" + System.identityHashCode(this) +
-                    " allocs=" + allocCount.get() + "waste=" +
-                    (capacity - nextFreeOffset.get());
+                   " allocs=" + allocCount.get() + "waste=" +
+                   (capacity - nextFreeOffset.get());
         }
     }
 

@@ -52,7 +52,6 @@ import org.apache.cassandra.io.FSReadError;
 import org.apache.cassandra.io.FSWriteError;
 import org.apache.cassandra.io.sstable.CorruptSSTableException;
 import org.apache.cassandra.utils.JVMStabilityInspector;
-import org.apache.cassandra.utils.memory.MemoryUtil;
 
 import static org.apache.cassandra.utils.Throwables.maybeFail;
 import static org.apache.cassandra.utils.Throwables.merge;
@@ -466,7 +465,7 @@ public final class FileUtils
         if (!value.matches("\\d+(\\.\\d+)? (GiB|KiB|MiB|TiB|bytes)"))
         {
             throw new IllegalArgumentException(
-                String.format("value %s is not a valid human-readable file size", value));
+            String.format("value %s is not a valid human-readable file size", value));
         }
         if (value.endsWith(" TiB"))
         {
