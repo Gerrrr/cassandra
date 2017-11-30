@@ -544,7 +544,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         if (epStates.isEmpty() && DatabaseDescriptor.getSeeds().contains(FBUtilities.getBroadcastAddressAndPort()))
             logger.info("Unable to gossip with any peers but continuing anyway since node is in its own seed list");
 
-        // If bootstrapping, check whether any previously known status for the endpoint makes it unsafe to do so.
+        // If bootstrapping, check whether any previously known status for the endpoint makes it UNSAFE to do so.
         // If not bootstrapping, compare the host id for this endpoint learned from gossip (if any) with the local
         // one, which was either read from system.local or generated at startup. If a learned id is present &
         // doesn't match the local, then the node needs replacing
