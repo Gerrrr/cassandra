@@ -46,6 +46,7 @@ import org.apache.cassandra.auth.IAuthorizer;
 import org.apache.cassandra.auth.IInternodeAuthenticator;
 import org.apache.cassandra.auth.INetworkAuthorizer;
 import org.apache.cassandra.auth.IRoleManager;
+import org.apache.cassandra.concurrent.StageManager;
 import org.apache.cassandra.config.Config.CommitLogSync;
 import org.apache.cassandra.config.EncryptionOptions.ServerEncryptionOptions.InternodeEncryption;
 import org.apache.cassandra.db.ConsistencyLevel;
@@ -155,6 +156,7 @@ public class DatabaseDescriptor
         setConfig(loadConfig());
         applyAll();
         AuthConfig.applyAuth();
+        StageManager.initDummy();
     }
 
     /**
@@ -200,6 +202,8 @@ public class DatabaseDescriptor
         applySnitch();
 
         applyEncryptionContext();
+
+        StageManager.initDummy();
     }
 
     /**

@@ -59,6 +59,14 @@ public class StageManager
         stages.put(Stage.TRACING, tracingExecutor());
     }
 
+    public static void initDummy()
+    {
+        // Empty placeholder to get this class initialized - see CASSANDRA-14875
+        //
+        // All stages will be initialized before anything "important" happens but after configuration is loaded and
+        // DatabaseDescriptor is initialized.
+    }
+
     private static LocalAwareExecutorService tracingExecutor()
     {
         RejectedExecutionHandler reh = new RejectedExecutionHandler()
