@@ -21,14 +21,13 @@ package org.apache.cassandra.tools.nodetool;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
 import io.airlift.command.Command;
 import org.apache.cassandra.locator.EndpointSnitchInfoMBean;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.cassandra.tools.NodeTool;
+import org.apache.cassandra.tools.nodetool.formatter.TableBuilder;
 
 @Command(name = "listendpointspendinghints", description = "Print all the endpoints that this node has hints for")
 public class ListEndpointsPendingHints extends NodeTool.NodeToolCmd
@@ -46,15 +45,11 @@ public class ListEndpointsPendingHints extends NodeTool.NodeToolCmd
             Map<String, String> endpointMap = probe.getEndpointMap();
             Map<String, String> simpleStates = probe.getFailureDetectorSimpleStates();
             EndpointSnitchInfoMBean epSnitchInfo = probe.getEndpointSnitchInfoProxy();
-            int maxAddressLength = Collections.max(
-                    endpointMap.values(),
-                    Comparator.comparingInt(String::length)
-            ).length();
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
-            String formatPlaceholder = "%%-36s %%-%ds %%-12s %%-12s %%-7s %%-12s %%-23s %%-23s%n";
-            String format = String.format(formatPlaceholder, maxAddressLength);
-            System.out.printf(format, "Host ID", "Address", "Rack", "DC", "Status", "Total files", "Newest", "Oldest");
+            TableBuilder tb = new TableBuilder();
+
+            tb.add("Host ID", "Address", "Rack", "DC", "Status", "Total files", "Newest", "Oldest");
             for (Map.Entry<String, Map<String, String>> entry : endpoints.entrySet())
             {
                 String endpoint = entry.getKey();
@@ -74,8 +69,7 @@ public class ListEndpointsPendingHints extends NodeTool.NodeToolCmd
                     dc = "Unknown";
                     status = "Unknown";
                 }
-                System.out.printf(
-                    format,
+                tb.add(
                     endpoint,
                     address,
                     rack,
@@ -86,6 +80,7 @@ public class ListEndpointsPendingHints extends NodeTool.NodeToolCmd
                     sdf.format((new Date(Long.parseLong(entry.getValue().get("oldest")))))
                 );
             }
+            tb.printTo(System.out);
         }
     }
 }
