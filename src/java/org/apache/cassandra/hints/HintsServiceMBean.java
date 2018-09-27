@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.hints;
 
+import java.util.Map;
+
 public interface HintsServiceMBean
 {
     /**
@@ -34,6 +36,13 @@ public interface HintsServiceMBean
      * or being written to).
      */
     void deleteAllHints();
+
+    /**
+     * Lists all the endpoints that this node has hints for.
+     *
+     * @return mapping of endpoints to relevant hint information - total number of files, newest and oldest timestamps
+     */
+    Map<String, Map<String, String>> listEndpointsPendingHints();
 
     /**
      * Irrevocably deletes all the stored hints files for the target address (with the exception of those that are
