@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -143,6 +144,8 @@ final class HintsStore
         return !dispatchDequeue.isEmpty();
     }
 
+    Stream<HintsDescriptor> descriptors() { return dispatchDequeue.stream(); }
+
     InputPosition getDispatchOffset(HintsDescriptor descriptor)
     {
         return dispatchPositions.get(descriptor);
@@ -207,6 +210,7 @@ final class HintsStore
         {
             hintsWriter.close();
             offerLast(hintsWriter.descriptor());
+            logger.debug("Closed hints writer for {}", hintsWriter.descriptor());
             hintsWriter = null;
             SyncUtil.trySyncDir(hintsDirectory);
         }

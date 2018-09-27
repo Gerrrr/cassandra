@@ -67,6 +67,8 @@ import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.gms.GossiperMBean;
 import org.apache.cassandra.db.HintedHandOffManager;
 import org.apache.cassandra.locator.DynamicEndpointSnitchMBean;
+import org.apache.cassandra.hints.HintsService;
+import org.apache.cassandra.hints.HintsServiceMBean;
 import org.apache.cassandra.locator.EndpointSnitchInfoMBean;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.metrics.TableMetrics.Sampler;
@@ -123,6 +125,7 @@ public class NodeProbe implements AutoCloseable
     private CacheServiceMBean cacheService;
     private StorageProxyMBean spProxy;
     private HintedHandOffManagerMBean hhProxy;
+    private HintsServiceMBean hintsService;
     private BatchlogManagerMBean bmProxy;
     private boolean failed;
 
@@ -210,6 +213,8 @@ public class NodeProbe implements AutoCloseable
             spProxy = JMX.newMBeanProxy(mbeanServerConn, name, StorageProxyMBean.class);
             name = new ObjectName(HintedHandOffManager.MBEAN_NAME);
             hhProxy = JMX.newMBeanProxy(mbeanServerConn, name, HintedHandOffManagerMBean.class);
+            name = new ObjectName(HintsService.MBEAN_NAME);
+            hintsService = JMX.newMBeanProxy(mbeanServerConn, name, HintsServiceMBean.class);
             name = new ObjectName(GCInspector.MBEAN_NAME);
             gcProxy = JMX.newMBeanProxy(mbeanServerConn, name, GCInspectorMXBean.class);
             name = new ObjectName(Gossiper.MBEAN_NAME);
@@ -555,6 +560,8 @@ public class NodeProbe implements AutoCloseable
     {
         return ssProxy.getEndpointToHostId();
     }
+
+    public Map<String, String> getEndpointMap() { return ssProxy.getHostIdToEndpoint(); }
 
     public String getLoadString()
     {
@@ -983,6 +990,11 @@ public class NodeProbe implements AutoCloseable
         {
             throw new RuntimeException("Error while refreshing system.size_estimates", e);
         }
+    }
+
+    public Map<String, Map<String, String>> listEndpointsPendingHints()
+    {
+        return hintsService.listEndpointsPendingHints();
     }
 
     public void stopNativeTransport()
@@ -1554,6 +1566,11 @@ public class NodeProbe implements AutoCloseable
         {
             throw new RuntimeException(e);
         }
+    }
+
+    public Map<String, String> getFailureDetectorSimpleStates()
+    {
+        return fdProxy.getSimpleStates();
     }
 }
 

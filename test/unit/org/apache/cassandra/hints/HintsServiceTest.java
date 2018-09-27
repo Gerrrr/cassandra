@@ -19,12 +19,14 @@ package org.apache.cassandra.hints;
 
 import java.net.InetAddress;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
@@ -175,6 +177,29 @@ public class HintsServiceTest
         InputPosition dispatchOffset = store.getDispatchOffset(descriptor);
         assertTrue(dispatchOffset != null);
         assertTrue(((ChecksummedDataInput.Position) dispatchOffset).sourcePosition > 0);
+    }
+
+    @Test
+    public void testListEndpointsPendingHints() throws InterruptedException, ExecutionException
+    {
+        MockMessagingSpy spy = sendHintsAndResponses(20000, -1);
+
+        spy.interceptMessageOut(10000).get();
+        HintsService.instance.pauseDispatch();
+
+        Map<String, Map<String, String>> endpoints = HintsService.instance.listEndpointsPendingHints();
+        String hostId = StorageService.instance.getLocalHostUUID().toString();
+
+        assertEquals(Sets.newHashSet(hostId), endpoints.keySet());
+
+        Map<String, String> payload = endpoints.get(hostId);
+        assertEquals(Sets.newHashSet("totalFiles", "oldest", "newest"), payload.keySet());
+        assertEquals("1", payload.get("totalFiles"));
+        assertEquals(payload.get("oldest"), payload.get("newest")); // there is 1 descriptor with only 1 timestamp
+
+        HintsService.instance.resumeDispatch();
+        spy.interceptMessageOut(10000).get();
+        assertEquals(Collections.emptyMap(), HintsService.instance.listEndpointsPendingHints());
     }
 
     private MockMessagingSpy sendHintsAndResponses(int noOfHints, int noOfResponses)
