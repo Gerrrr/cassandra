@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,7 +70,7 @@ public final class HintsService implements HintsServiceMBean
 
     public static HintsService instance = new HintsService();
 
-    private static final String MBEAN_NAME = "org.apache.cassandra.hints:type=HintsService";
+    public static final String MBEAN_NAME = "org.apache.cassandra.hints:type=HintsService";
 
     private static final int MIN_BUFFER_SIZE = 32 << 20;
     static final ImmutableMap<String, Object> EMPTY_PARAMS = ImmutableMap.of();
@@ -275,6 +276,26 @@ public final class HintsService implements HintsServiceMBean
     public void deleteAllHints()
     {
         catalog.deleteAllHints();
+    }
+
+    /**
+     * Lists endpoints that this node has hints for
+     *
+     * @return mapping of endpoints to relevant hint information - total number of files, newest and oldest timestamps
+     */
+    public Map<String, Map<String, String>> listEndpointsPendingHints()
+    {
+        return catalog.stores()
+                      .filter(HintsStore::hasFiles)
+                      .collect(Collectors.toMap(hs -> hs.hostId.toString(),
+                                                hs -> ImmutableMap.of(
+                                                "totalFiles", String.valueOf(hs.getDispatchQueueSize()),
+                                                "oldest", String.valueOf(hs.descriptors()
+                                                                           .map(hd -> hd.timestamp)
+                                                                           .reduce(Long.MAX_VALUE, Long::min)),
+                                                "newest", String.valueOf(hs.descriptors()
+                                                                           .map(hd -> hd.timestamp)
+                                                                           .reduce(Long.MIN_VALUE, Long::max)))));
     }
 
     /**

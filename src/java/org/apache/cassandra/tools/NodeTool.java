@@ -155,6 +155,7 @@ public class NodeTool
                 SetMaxHintWindow.class,
                 Snapshot.class,
                 ListSnapshots.class,
+                ListEndpointsPendingHints.class,
                 Status.class,
                 StatusBinary.class,
                 StatusGossip.class,
