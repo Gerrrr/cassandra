@@ -223,7 +223,7 @@ public class ColumnIdentifier extends Selectable implements IMeasurableMemory, C
     public Selector.Factory newSelectorFactory(CFMetaData cfm, List<ColumnDefinition> defs) throws InvalidRequestException
     {
         ColumnDefinition def = cfm.getColumnDefinition(this);
-        if (def == null)
+        if (def == null || cfm.isHiddenColumn(def))
             throw new InvalidRequestException(String.format("Undefined name %s in selection clause", this));
 
         return SimpleSelector.newFactory(def, addAndGetIndex(def, defs));

@@ -782,7 +782,7 @@ public final class CFMetaData
         return compactValueColumn;
     }
 
-    private boolean isHiddenColumn(ColumnDefinition def)
+    public boolean isHiddenColumn(ColumnDefinition def)
     {
         return hiddenColumns.contains(def);
     }
@@ -988,10 +988,7 @@ public final class CFMetaData
     // for instance) so...
     public ColumnDefinition getColumnDefinition(ByteBuffer name)
     {
-        ColumnDefinition cd = columnMetadata.get(name);
-        if (cd == null || isHiddenColumn(cd))
-            return null;
-        return cd;
+        return columnMetadata.get(name);
     }
 
     public static boolean isNameValid(String name)
@@ -1132,7 +1129,7 @@ public final class CFMetaData
     {
         ColumnDefinition def = getColumnDefinition(from);
 
-        if (def == null)
+        if (def == null || isHiddenColumn(def))
             throw new InvalidRequestException(String.format("Cannot rename unknown column %s in keyspace %s", from, cfName));
 
         if (getColumnDefinition(to) != null)

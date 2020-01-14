@@ -265,7 +265,7 @@ public abstract class Relation {
         ColumnIdentifier identifier = entity.prepare(cfm);
         ColumnDefinition def = cfm.getColumnDefinition(identifier);
 
-        if (def == null)
+        if (def == null || cfm.isHiddenColumn(def))
             throw new UnrecognizedEntityException(identifier, this);
 
         return def;

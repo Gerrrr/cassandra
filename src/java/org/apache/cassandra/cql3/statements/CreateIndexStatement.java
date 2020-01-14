@@ -99,7 +99,7 @@ public class CreateIndexStatement extends SchemaAlteringStatement
         {
             ColumnDefinition cd = cfm.getColumnDefinition(target.column);
 
-            if (cd == null)
+            if (cd == null || cfm.isHiddenColumn(cd))
                 throw new InvalidRequestException("No column definition found for column " + target.column);
 
             // TODO: we could lift that limitation

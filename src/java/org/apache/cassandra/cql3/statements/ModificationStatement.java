@@ -912,7 +912,9 @@ public abstract class ModificationStatement implements CQLStatement
         protected static ColumnDefinition getColumnDefinition(CFMetaData cfm, Raw rawId)
         {
             ColumnIdentifier id = rawId.prepare(cfm);
-            return checkNotNull(cfm.getColumnDefinition(id), "Unknown identifier %s", id);
+            ColumnDefinition cd = checkNotNull(cfm.getColumnDefinition(id), "Unknown identifier %s", id);
+            checkFalse(cfm.isHiddenColumn(cd), "Unknown identifier %s", id);
+            return cd;
         }
     }
 }

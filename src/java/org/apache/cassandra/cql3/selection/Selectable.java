@@ -78,7 +78,7 @@ public abstract class Selectable
                                                    List<ColumnDefinition> defs) throws InvalidRequestException
         {
             ColumnDefinition def = cfm.getColumnDefinition(id);
-            if (def == null)
+            if (def == null || cfm.isHiddenColumn(def))
                 throw new InvalidRequestException(String.format("Undefined name %s in selection clause", id));
             if (def.isPrimaryKeyColumn())
                 throw new InvalidRequestException(
