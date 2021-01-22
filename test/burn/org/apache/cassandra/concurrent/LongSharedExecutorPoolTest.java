@@ -207,7 +207,7 @@ public class LongSharedExecutorPoolTest
                 results.add(new Result(future, System.nanoTime() + time));
             }
             long end = start + (long) Math.ceil(targetTotalElapsed / (double) threadCounts[executorIndex])
-                       + TimeUnit.MILLISECONDS.toNanos(100L);
+                       + TimeUnit.MILLISECONDS.toNanos(120L);
             long now = System.nanoTime();
             if (runs++ > executorCount && now > end)
                 throw new AssertionError();
